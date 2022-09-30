@@ -1,7 +1,7 @@
-*** Journal of Information Technology & Politics - May 2021 ***
+*** Swiss Political Science Review ***
 * Title: What Drives the Selection of Political Information in Google? Tension Between Ideal Democracy and the Influence of Ranking
 clear all
-cd "/Users/ZumofenG/OneDrive/PhD/P7_SE-Google_ECPR/Daten"
+cd "/Users/ZumofenG/OneDrive/011_PhD/8_Projects/P5_Selection Political Information Google/Daten"
 capture log close
 log using analysis1_google.log, replace
 set more off
@@ -291,25 +291,25 @@ oneway internet group if database==1
 
 * 3.3 Cross-table analysis and chi-square test for independence
 *--> Test if there is a significant relationship between Google's ranking and selection of a source of information
-tabulate result1 group, chi2
+tabulate result1 group if database==1, chi2
 * Yes: p-value = 0.000
-tabulate result2 group, chi2
+tabulate result2 group if database==1, chi2
 * Yes: p-value = 0.000
-tabulate result3 group, chi2
+tabulate result3 group if database==1, chi2
 * No: p-value = 0.207
-tabulate result4 group, chi2
+tabulate result4 group if database==1, chi2
 * Yes: p-value = 0.001
-tabulate result5 group, chi2
+tabulate result5 group if database==1, chi2
 * Yes: p-value= 0.048
-tabulate result6 group, chi2
+tabulate result6 group if database==1, chi2
 * Yes: p-value = 0.000
-tabulate result7 group, chi2
+tabulate result7 group if database==1, chi2
 * ~Yes: p-value = 0.090 (at 0.1)
-tabulate result8 group, chi2
+tabulate result8 group if database==1, chi2
 * Yes: p-value = 0.001
-tabulate result9 group, chi2
+tabulate result9 group if database==1, chi2
 * Yes: p-value = 0.019
-tabulate result10 group, chi2
+tabulate result10 group if database==1, chi2
 * Yes: p-value = 0.014
 
 * 3.4 ANOVA
@@ -515,12 +515,13 @@ label define ranking_cat2 0"random" 1"Top 2" 2"Least 8"
 replace source=0 if source==10
 label define source 0"Easyvote" 1"Governmental information (1)" 2"Governmental information (2)" 3"National newspaper" 4"Economic association" 5"National television" 6"Regional newspaper" 7"Expert blog" 8"Free newspaper" 9"Preferred political party"
 
-generate info_cues=1 if source==1 | source==2 | source==0
+generate info_cues=1 if source==1 | source==2
 replace info_cues=2 if source==9
 replace info_cues=3 if source==3 | source==5 | source==6
 replace info_cues=4 if source==8
 replace info_cues=5 if source==4
 replace info_cues=6 if source==7
+replace info_cues=0 if source==0
 label define info_cues 0"Easyvote-Basis" 1"Government" 2"Political party" 3"Quality media" 4"Tabloid media" 5"Economic association" 6"Expert blog" 
 
 generate info_cues2=1 if info_cues==2 | info_cues==5
@@ -552,27 +553,34 @@ replace expert_cues=0 if info_cues!=6
 
 * 5. Run a binary logistic regression
 * Figure 1 - Political information selection on a Google results page - Only ranking
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking if database==1
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking if database==1
 margins, dydx(ranking)
 marginsplot, xdimension(_deriv) recast(scatter) level(95) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking if database==1, or
 
 * Figure 2 - Political information selection on a Google results page - Ranking and cues
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking i.source if database==1
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1
 margins, dydx(ranking)
 marginsplot, xdimension(_deriv) allxlabels recast(scatter) level(95) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 margins, dydx(source)
 marginsplot, xdimension(_deriv) allxlabels recast(scatter) level(95) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Information cues on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
+* Goodness-of-fit
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1
+estat classification
+lsens
+lroc
+estat gof
+
 * Figure 3 - Political information selection on a Google results page - Interaction effect
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking_cat#i.info_cues if database==1
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking_cat#i.info_cues if database==1
 margins, dydx(ranking_cat) at(info_cues=(1(1)6))
-marginsplot, allxlabels recast(scatter) level(90) plot1opts(mcolor(black) msymbol(O)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (90% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Information cues on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking_cat#i.info_cues if database==1, or
+marginsplot, allxlabels recast(scatter) level(95) plot1opts(mcolor(black) msymbol(O)) plot2opts(mcolor(black) msymbol(square)) ciopts(lcolor(black) lpattern(solid)) ytitle(Average marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Information cues on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking_cat#i.info_cues if database==1, or
 
 
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking_cat#i.info_cues2#i.polknowl if database==1
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking_cat#i.info_cues2#i.polknowl if database==1
 margins, dydx(ranking_cat) at(info_cues2=(1(1)4))
 
 * 6. Robustness check
@@ -589,29 +597,42 @@ xtmelogit result i.sex age educ polint polknowl trust_fc party_attach vote_choic
 estat icc
 
 * 6.2 Operating system
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking i.source if database==1 & operation==0
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1 & operation==0
 margins, dydx(ranking)
 marginsplot, title(Computer user) title(, size(medium) color(black)) xdimension(_deriv) allxlabels recast(scatter) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking i.source  if database==1 & operation==1
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source  if database==1 & operation==1
 margins, dydx(ranking)
 marginsplot, title(Smartphone user) title(, size(medium) color(black)) xdimension(_deriv) allxlabels recast(scatter) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 * 6.3 Google as a source of information
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet i.ranking i.source if database==1 & source_google==0
+logit result i.sex age educ polint polknowl trust_fc party_attach i.ranking i.source if database==1 & source_google==0
 margins, dydx(ranking)
 marginsplot, title(Do not use Google as a source of political information) title(, size(medium) color(black)) xdimension(_deriv) allxlabels recast(scatter) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-logit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet i.ranking i.source if database==1 & source_google==1
+logit result i.sex age educ polint polknowl trust_fc party_attach i.ranking i.source if database==1 & source_google==1
 margins, dydx(ranking)
 marginsplot, level(90) title(Use Google as a source of political information) title(, size(medium) color(black)) xdimension(_deriv) allxlabels recast(scatter) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (90% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-* 6.4 Margins
+* 6.4 French - German speaking respondents
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1 & userlanguage=="DE"
+
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1 & userlanguage=="FR"
+
+* 6.5 Vote choice
+generate vote_decision = 0 if vote_choice==1 | vote_choice==2
+replace vote_decision = 1 if vote_choice==3 | vote_choice==4
+
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1 & vote_decision==0
+
+logit result i.sex age educ polint polknowl trust_fc party_attach internet source_google i.ranking i.source if database==1 & vote_decision==1
+
+* 6.6 Margins
 xtmelogit result i.ranking|| id: || group: if database==1, intpoints(10) 
 margins, dydx(ranking)
 marginsplot, xdimension(_deriv) allxlabels recast(scatter) level(95) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
-* 6.5 Robustness check
+* 6.7 Robustness check
 xtmelogit result i.sex age educ polint polknowl trust_fc party_attach vote_choice internet source_google i.ranking || group: if database==1 & operation==0, intpoints(10)
 margins, dydx(ranking)
 marginsplot, title(Computer user) title(, size(medium) color(black)) xdimension(_deriv) allxlabels recast(scatter) plotopts(mcolor(black) msymbol(diamond)) ciopts(lcolor(black) lpattern(solid)) ytitle(Conditional marginal effects (95% confidence interval)) ytitle(, size(small) color(black)) yline(0, lpattern(dash) lcolor(black)) xtitle(Ranking on Google's result page) xtitle(, size(small) color(black)) scheme(sj) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
